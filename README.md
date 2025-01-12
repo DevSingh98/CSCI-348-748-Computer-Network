@@ -66,17 +66,7 @@ To resolve `www.test.com`:
 - **Recursive Resolver**: A program that implements the recursive resolution logic.
 - **DNS Servers**: Programs hosted by each group member to simulate the hierarchy.
 - **Database**: A centralized or distributed database storing the DNS hierarchy.
-- **Documentation**: Detailed explanation of the implementation, architecture, and testing process.
-
-## Testing and Validation
-- Test the system with mock domains to ensure correct resolution.
-- Validate responses at each level of the hierarchy.
-- Implement logging to trace the query flow.
-
-## Future Enhancements
-- Add support for other DNS record types (e.g., MX, CNAME).
-- Implement caching in the recursive resolver for faster performance.
-- Introduce fault tolerance for server failures.
+- **Documentation**: Detailed explanation of the implementation, architecture.
 
 ## Conclusion
 This project provides hands-on experience with DNS resolution mechanics, distributed systems, and hierarchical data structures. By simulating a DNS hierarchy, it replicates the functionality of real-world DNS systems in a controlled environment.
