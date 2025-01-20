@@ -3,30 +3,31 @@ import java.net.*;
 
 public class Client {
     public static void main(String[] args) {
-        try {
-            Socket socket = new Socket("CHECK_DISCORD", 1234);
-            System.out.println("Connected to server.");
+        final int port = 1234;
+        try(DatagramSocket socket = new DatagramSocket(port)){
 
-            PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+            //Set IP addr of the Local DNS server
+            InetAddress localDNSAddress = InetAddress.getByName("LOCALDNS");
+            //Check Discord for IP since this git is currently public
+
             BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
-            BufferedReader serverResponse = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            String website = userInput.readLine();
 
-            String message, serverMessage;
-            while (true) {
-                // Sending a message to the server
-                System.out.println("Enter message to send to server:");
-                message = userInput.readLine();
-                if ("exit".equalsIgnoreCase(message)) {
-                    break;
-                }
-                output.println(message);
+            //Convert string into packet
+            DatagramPacket sendMsg = new DatagramPacket(website.getBytes(), website.length(), localDNSAddress, port);
+            socket.send(sendMsg);
+            /*
+            -----------------------------------------------------------------------------------
+             */
 
-                // Reading the response from the server
-                serverMessage = serverResponse.readLine();
-                System.out.println("Server: " + serverMessage);
-            }
-            socket.close();
-            System.out.println("Connection closed.");
+            // Receives packet from LOCAL DNS server
+            byte[] recvData = new byte[512];
+            DatagramPacket recvPacket = new DatagramPacket(recvData,recvData.length);
+            socket.receive(recvPacket);
+
+            //Converts packet into readable string
+            String response = new String(recvPacket.getData(),0,recvPacket.getLength());
+            System.out.println(response);
 
         } catch (IOException e) {
             System.out.println(e.getMessage());
