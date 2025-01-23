@@ -46,13 +46,14 @@ public class AuthoritativeServer {
     private static String processQuery(String query) {
         // Sample database to resolve domain names
         String[][] authDatabase = {
-                {"www.cs748.com", "93.184.216.34"},
-                {"www.cs348.com", "93.184.216.35"}
+                {"www.cs748.com", "93.184.216.34","A"},
+                {"www.cs348.com", "93.184.216.35","A"},
+                {"testmail.com","mail.testmail.com","MX"}
         };
 
         for (String[] record : authDatabase) {
             if (record[0].equals(query)) {
-                return "Resolved:" + record[1];
+                return "Resolved:" +record[0]+","+record[1]+"," + record[2];
             }
         }
         return "Not found";
