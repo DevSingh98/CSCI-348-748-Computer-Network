@@ -1,0 +1,4 @@
+RootServer=127.0.0.1:8053
+TLDServer=127.0.0.1:8054
+AuthoritativeServer=127.0.0.1:8055
+RecursiveResolver=127.0.0.1:8056
