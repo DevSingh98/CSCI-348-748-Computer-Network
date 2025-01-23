@@ -1,6 +1,8 @@
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class TLDServer {
     private static String ROLE = "TLD";
@@ -24,23 +26,50 @@ public class TLDServer {
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     socket.receive(packet);
 
-                    String query = new String(packet.getData(), 0, packet.getLength());
-                    System.out.println("Received query: " + query);
-
-                    // Check if the query ends with ".com" and forward it to the Authoritative Server
-                    String authoritativeConfig = DNSConfig.get("AuthoritativeServer");
-                    String response = query.endsWith(".com") ? authoritativeConfig : "Not found";
-
                     InetAddress clientAddress = packet.getAddress();
                     int clientPort = packet.getPort();
+
+                    String query = new String(packet.getData(), 0, packet.getLength());
+                    System.out.println("Received query: " + query + " from IP " + clientAddress + ":" + clientPort);
+
+                    String response = forwardToAuth(query, socket);
+
                     byte[] responseData = response.getBytes();
                     DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length, clientAddress, clientPort);
                     socket.send(responsePacket);
                     System.out.println("Sent response: " + response);
+                    System.out.println();
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    private static String forwardToAuth(String query, DatagramSocket socket) throws UnknownHostException {
+        String serverConfig;
+        if (query.endsWith(".com")) {
+            serverConfig = DNSConfig.get("AuthoritativeServer");
+        } else {
+            return "Domain not supported" + query;
+        }
+        String[] parts = serverConfig.split(":");
+        InetAddress authServerAddress = InetAddress.getByName(parts[0]);
+        int authServerPort = Integer.parseInt(parts[1]);
+
+        try {
+            byte[] queryData = query.getBytes();
+            DatagramPacket queryPacket = new DatagramPacket(queryData, queryData.length, authServerAddress, authServerPort);
+            socket.send(queryPacket);
+            System.out.println("Forwarding to " + authServerAddress+":"+authServerPort);
+
+            byte[] responseBuffer = new byte[512];
+            DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length);
+            socket.receive(responsePacket);
+
+            return new String(responsePacket.getData(), 0, responsePacket.getLength());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

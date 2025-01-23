@@ -23,18 +23,20 @@ public class AuthoritativeServer {
                     byte[] buffer = new byte[512];
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     socket.receive(packet);
+                    InetAddress clientAddress = packet.getAddress();
+                    int clientPort = packet.getPort();
 
                     String query = new String(packet.getData(), 0, packet.getLength());
-                    System.out.println("Received query: " + query);
+                    System.out.println("Received query: " + query + " from IP " + clientAddress + ":" + clientPort);
 
                     String response = processQuery(query);
 
-                    InetAddress clientAddress = packet.getAddress();
-                    int clientPort = packet.getPort();
+
                     byte[] responseData = response.getBytes();
                     DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length, clientAddress, clientPort);
                     socket.send(responsePacket);
                     System.out.println("Sent response: " + response);
+                    System.out.println();
                 }
             }
         } catch (Exception e) {
@@ -45,13 +47,14 @@ public class AuthoritativeServer {
     private static String processQuery(String query) {
         // Sample database to resolve domain names
         String[][] authDatabase = {
-                {"www.cs748.com", "93.184.216.34"},
-                {"www.cs348.com", "93.184.216.35"}
+                {"www.cs748.com", "93.184.216.34","A"},
+                {"www.cs348.com", "93.184.216.35","A"},
+                {"testmail.com","mail.testmail.com","MX"}
         };
 
         for (String[] record : authDatabase) {
             if (record[0].equals(query)) {
-                return "Resolved:" + record[1];
+                return "Resolved:" +record[0]+","+record[1]+"," + record[2];
             }
         }
         return "Not found";
