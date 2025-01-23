@@ -4,12 +4,12 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-public class TLDServer {
+public class TLDServerOrg {
     private static String ROLE = "TLD";
 
     public static void main(String[] args) {
         try {
-            String config = DNSConfig.get("TLDServerCom");
+            String config = DNSConfig.get("TLDServerOrg");
             if (config == null) {
                 throw new RuntimeException("TLDServer configuration not found!");
             }
@@ -47,7 +47,7 @@ public class TLDServer {
     }
     private static String forwardToAuth(String query, DatagramSocket socket) throws UnknownHostException {
         String serverConfig;
-        if (query.endsWith(".com")) {
+        if (query.endsWith(".org")) {
             serverConfig = DNSConfig.get("AuthoritativeServerOrg");
         } else {
             return "Domain not supported" + query;

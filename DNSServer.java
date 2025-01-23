@@ -46,7 +46,9 @@ public class DNSServer {
     private static String forwardToTLD(String query, DatagramSocket socket) throws UnknownHostException {
         String tldServerConfig;
         if (query.endsWith(".com")) {
-            tldServerConfig = DNSConfig.get("TLDServer");
+            tldServerConfig = DNSConfig.get("TLDServerCom");
+        } else if (query.endsWith(".org")) {
+            tldServerConfig = DNSConfig.get("TLDServerOrg");
         } else {
             return "Domain not supported " + query;
         }
