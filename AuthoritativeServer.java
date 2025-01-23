@@ -23,14 +23,15 @@ public class AuthoritativeServer {
                     byte[] buffer = new byte[512];
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     socket.receive(packet);
+                    InetAddress clientAddress = packet.getAddress();
+                    int clientPort = packet.getPort();
 
                     String query = new String(packet.getData(), 0, packet.getLength());
-                    System.out.println("Received query: " + query);
+                    System.out.println("Received query: " + query + " from IP " + clientAddress + ":" + clientPort);
 
                     String response = processQuery(query);
 
-                    InetAddress clientAddress = packet.getAddress();
-                    int clientPort = packet.getPort();
+
                     byte[] responseData = response.getBytes();
                     DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length, clientAddress, clientPort);
                     socket.send(responsePacket);

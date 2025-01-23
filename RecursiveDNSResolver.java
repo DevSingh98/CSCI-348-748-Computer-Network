@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -37,8 +38,8 @@ public class RecursiveDNSResolver {
                     String[] rootParts = rootConfig.split(":");
                     String rootServerIP = rootParts[0];
                     int rootPort = Integer.parseInt(rootParts[1]);
-
-                    String resolvedIP = resolveDomain(domain, rootServerIP, rootPort);
+                    socket.setSoTimeout(10000);
+                    String resolvedIP = resolveDomain(domain, rootServerIP, rootPort,socket);
                     String response = resolvedIP != null ? "Resolved:" + resolvedIP : "Failed to resolve " + domain;
 
                     InetAddress clientAddress = queryPacket.getAddress();
@@ -46,7 +47,7 @@ public class RecursiveDNSResolver {
                     byte[] responseData = response.getBytes();
                     DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length, clientAddress, clientPort);
                     socket.send(responsePacket);
-
+                    socket.setSoTimeout(0);
                     System.out.println("Sent response: " + response);
                 }
             }
@@ -55,11 +56,7 @@ public class RecursiveDNSResolver {
         }
     }
 
-    private static String resolveDomain(String domain, String serverIP, int port) throws Exception {
-        DatagramSocket socket = new DatagramSocket();
-        try {
-            socket.setSoTimeout(10000);
-            while (true) {
+    private static String resolveDomain(String domain, String serverIP, int port, DatagramSocket socket) throws Exception {
                 System.out.println("Sending query to server: " + serverIP + ":" + port + " for domain: " + domain);
 
                 byte[] queryData = domain.getBytes();
@@ -73,7 +70,6 @@ public class RecursiveDNSResolver {
                     socket.receive(responsePacket);
                 } catch (java.net.SocketTimeoutException e) {
                     System.out.println("Timeout waiting for response from server: " + serverIP);
-                    break;
                 }
 
                 String response = new String(responsePacket.getData(), 0, responsePacket.getLength());
@@ -87,12 +83,7 @@ public class RecursiveDNSResolver {
                     System.out.println("Moving to the next server: " + serverIP + ":" + port);
                 } else {
                     System.out.println("Unexpected response format: " + response);
-                    break;
                 }
-            }
-        } finally {
-            socket.close();
-        }
         return null;
     }
 }

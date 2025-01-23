@@ -1,6 +1,5 @@
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
+import java.io.IOException;
+import java.net.*;
 
 public class DNSServer {
     private static String ROLE = "Root";
@@ -23,24 +22,52 @@ public class DNSServer {
                     byte[] buffer = new byte[512];
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     socket.receive(packet);
-
-                    String query = new String(packet.getData(), 0, packet.getLength());
-                    System.out.println("Received query: " + query);
-
-                    // Check if the query ends with ".com" and forward to TLD server
-                    String tldServerConfig = DNSConfig.get("TLDServer");
-                    String response = query.endsWith(".com") ? tldServerConfig : "Not found";
-
                     InetAddress clientAddress = packet.getAddress();
                     int clientPort = packet.getPort();
+
+                    String query = new String(packet.getData(), 0, packet.getLength());
+                    System.out.println("Received query: " + query + " from IP " + clientAddress + ":" + clientPort);
+
+                    //Forward to TLD
+                    String response = forwardToTLD(query, socket);
+
                     byte[] responseData = response.getBytes();
                     DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length, clientAddress, clientPort);
                     socket.send(responsePacket);
-                    System.out.println("Sent response: " + response);
+                    System.out.println("Sent: " + response + " to " + clientAddress + ":" + clientPort );
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static String forwardToTLD(String query, DatagramSocket socket) throws UnknownHostException {
+        String tldServerConfig;
+        if (query.endsWith(".com")) {
+            tldServerConfig = DNSConfig.get("TLDServer");
+        } else {
+            return "Domain not supported " + query;
+        }
+        String[] parts = tldServerConfig.split(":");
+        InetAddress tldServerAddress = InetAddress.getByName(parts[0]);
+        int tldServerPort = Integer.parseInt(parts[1]);
+
+        try  {
+
+            byte[] queryData = query.getBytes();
+            DatagramPacket queryPacket = new DatagramPacket(queryData, queryData.length, tldServerAddress, tldServerPort);
+            socket.send(queryPacket);
+            System.out.println("Forwarding to " + tldServerAddress + ":" + tldServerPort);
+
+            byte[] responseBuffer = new byte[512];
+            DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length);
+            socket.receive(responsePacket);
+
+            return new String(responsePacket.getData(), 0, responsePacket.getLength());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }
