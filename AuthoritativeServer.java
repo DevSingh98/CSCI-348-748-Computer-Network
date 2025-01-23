@@ -16,7 +16,7 @@ public class AuthoritativeServer {
             String ipAddress = parts[0];
             int port = Integer.parseInt(parts[1]);
 
-            try (DatagramSocket socket = new DatagramSocket(port, InetAddress.getByName(ipAddress))) {
+            try (DatagramSocket socket = new DatagramSocket(port)) {
                 System.out.println(ROLE + " running on " + ipAddress + ":" + port);
 
                 while (true) {

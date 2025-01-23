@@ -14,15 +14,41 @@ public class RecursiveDNSResolver {
             }
 
             String[] parts = config.split(":");
-            String rootServerIP = parts[0];
-            int port = Integer.parseInt(parts[1]);
-            String domain = "www.cs748.com";
+            String resolverIP = parts[0];
+            int resolverPort = Integer.parseInt(parts[1]);
 
-            String resolvedIP = resolveDomain(domain, rootServerIP, port);
-            if (resolvedIP != null) {
-                System.out.println(domain + " resolved to " + resolvedIP);
-            } else {
-                System.out.println("Failed to resolve " + domain);
+            try (DatagramSocket socket = new DatagramSocket(resolverPort)) {
+                System.out.println(ROLE + " listening on " + resolverIP + ":" + resolverPort);
+
+                while (true) {
+                    byte[] buffer = new byte[512];
+                    DatagramPacket queryPacket = new DatagramPacket(buffer, buffer.length);
+                    socket.receive(queryPacket);
+
+                    String domain = new String(queryPacket.getData(), 0, queryPacket.getLength());
+                    System.out.println("Received query for domain: " + domain);
+
+                    String rootConfig = DNSConfig.get("RootServer");
+                    if (rootConfig == null) {
+                        System.out.println("RootServer configuration not found!");
+                        continue;
+                    }
+
+                    String[] rootParts = rootConfig.split(":");
+                    String rootServerIP = rootParts[0];
+                    int rootPort = Integer.parseInt(rootParts[1]);
+
+                    String resolvedIP = resolveDomain(domain, rootServerIP, rootPort);
+                    String response = resolvedIP != null ? "Resolved:" + resolvedIP : "Failed to resolve " + domain;
+
+                    InetAddress clientAddress = queryPacket.getAddress();
+                    int clientPort = queryPacket.getPort();
+                    byte[] responseData = response.getBytes();
+                    DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length, clientAddress, clientPort);
+                    socket.send(responsePacket);
+
+                    System.out.println("Sent response: " + response);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -30,35 +56,43 @@ public class RecursiveDNSResolver {
     }
 
     private static String resolveDomain(String domain, String serverIP, int port) throws Exception {
-        while (true) {
-            DatagramSocket socket = new DatagramSocket();
-            byte[] queryData = domain.getBytes();
-            InetAddress serverAddress = InetAddress.getByName(serverIP);
-            DatagramPacket queryPacket = new DatagramPacket(queryData, queryData.length, serverAddress, port);
-            socket.send(queryPacket);
+        DatagramSocket socket = new DatagramSocket();
+        try {
+            socket.setSoTimeout(10000);
+            while (true) {
+                System.out.println("Sending query to server: " + serverIP + ":" + port + " for domain: " + domain);
 
-            byte[] buffer = new byte[512];
-            DatagramPacket responsePacket = new DatagramPacket(buffer, buffer.length);
-            socket.receive(responsePacket);
+                byte[] queryData = domain.getBytes();
+                InetAddress serverAddress = InetAddress.getByName(serverIP);
+                DatagramPacket queryPacket = new DatagramPacket(queryData, queryData.length, serverAddress, port);
+                socket.send(queryPacket);
 
-            String response = new String(responsePacket.getData(), 0, responsePacket.getLength());
-            System.out.println("Response from server (" + serverIP + "): " + response);
+                byte[] buffer = new byte[2048];
+                DatagramPacket responsePacket = new DatagramPacket(buffer, buffer.length);
+                try {
+                    socket.receive(responsePacket);
+                } catch (java.net.SocketTimeoutException e) {
+                    System.out.println("Timeout waiting for response from server: " + serverIP);
+                    break;
+                }
 
-            socket.close();
+                String response = new String(responsePacket.getData(), 0, responsePacket.getLength());
+                System.out.println("Response from server (" + serverIP + "): " + response);
 
-            // Ensure the response is a valid resolution or a valid next server to query
-            if (response.startsWith("Resolved:")) {
-                return response.split(":")[1]; // IP of the resolved domain
-            } else if (response.contains(":")) {
-                // The response is a server IP to query next
-                serverIP = response.split(":")[0];
-                System.out.println("Moving to the next server: " + serverIP);
-            } else {
-                System.out.println("Unexpected response format: " + response);
-                break;
+                if (response.startsWith("Resolved:")) {
+                    return response.split(":")[1];
+                } else if (response.contains(":")) {
+                    serverIP = response.split(":")[0];
+                    port = Integer.parseInt(response.split(":")[1]);
+                    System.out.println("Moving to the next server: " + serverIP + ":" + port);
+                } else {
+                    System.out.println("Unexpected response format: " + response);
+                    break;
+                }
             }
+        } finally {
+            socket.close();
         }
         return null;
     }
-
 }
