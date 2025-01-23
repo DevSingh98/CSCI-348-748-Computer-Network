@@ -45,7 +45,7 @@ public class TLDServer {
         }
     }
     private static String forwardToAuth(String query, DatagramSocket socket) throws UnknownHostException {
-        String serverConfig = null;
+        String serverConfig;
         if (query.endsWith(".com")) {
             serverConfig = DNSConfig.get("AuthoritativeServer");
         } else {
