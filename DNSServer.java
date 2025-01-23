@@ -16,27 +16,28 @@ public class DNSServer {
             String ipAddress = parts[0];
             int port = Integer.parseInt(parts[1]);
 
-            DatagramSocket socket = new DatagramSocket(port, InetAddress.getByName(ipAddress));
-            System.out.println(ROLE + " DNS Server running on " + ipAddress + ":" + port);
+            try (DatagramSocket socket = new DatagramSocket(port)) {
+                System.out.println(ROLE + " DNS Server running on " + ipAddress + ":" + port);
 
-            while (true) {
-                byte[] buffer = new byte[512];
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet);
+                while (true) {
+                    byte[] buffer = new byte[512];
+                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                    socket.receive(packet);
 
-                String query = new String(packet.getData(), 0, packet.getLength());
-                System.out.println("Received query: " + query);
+                    String query = new String(packet.getData(), 0, packet.getLength());
+                    System.out.println("Received query: " + query);
 
-                // Check if the query ends with ".com" and forward to TLD server
-                String tldServerConfig = DNSConfig.get("TLDServer");
-                String response = query.endsWith(".com") ? tldServerConfig : "Not found";
+                    // Check if the query ends with ".com" and forward to TLD server
+                    String tldServerConfig = DNSConfig.get("TLDServer");
+                    String response = query.endsWith(".com") ? tldServerConfig : "Not found";
 
-                InetAddress clientAddress = packet.getAddress();
-                int clientPort = packet.getPort();
-                byte[] responseData = response.getBytes();
-                DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length, clientAddress, clientPort);
-                socket.send(responsePacket);
-                System.out.println("Sent response: " + response);
+                    InetAddress clientAddress = packet.getAddress();
+                    int clientPort = packet.getPort();
+                    byte[] responseData = response.getBytes();
+                    DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length, clientAddress, clientPort);
+                    socket.send(responsePacket);
+                    System.out.println("Sent response: " + response);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
