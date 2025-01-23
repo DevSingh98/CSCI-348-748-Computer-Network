@@ -36,6 +36,7 @@ public class AuthoritativeServer {
                     DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length, clientAddress, clientPort);
                     socket.send(responsePacket);
                     System.out.println("Sent response: " + response);
+                    System.out.println();
                 }
             }
         } catch (Exception e) {

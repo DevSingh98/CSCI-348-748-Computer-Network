@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -78,6 +77,7 @@ public class RecursiveDNSResolver {
                     socket.send(responsePacket);
                     socket.setSoTimeout(0);
                     System.out.println("Sent response: " + response);
+                    System.out.println();
                 }
                 }
             }

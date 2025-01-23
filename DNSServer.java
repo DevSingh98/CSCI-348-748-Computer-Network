@@ -35,6 +35,7 @@ public class DNSServer {
                     DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length, clientAddress, clientPort);
                     socket.send(responsePacket);
                     System.out.println("Sent: " + response + " to " + clientAddress + ":" + clientPort );
+                    System.out.println();
                 }
             }
         } catch (Exception e) {
