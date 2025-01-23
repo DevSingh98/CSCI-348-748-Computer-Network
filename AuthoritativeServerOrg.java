@@ -2,8 +2,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
-public class AuthoritativeServer {
-    private static String ROLE = "AuthoritativeServerCom";
+public class AuthoritativeServerOrg {
+    private static String ROLE = "AuthoritativeServerOrg";
 
     public static void main(String[] args) {
         try {
@@ -47,9 +47,9 @@ public class AuthoritativeServer {
     private static String processQuery(String query) {
         // Sample database to resolve domain names
         String[][] authDatabase = {
-                {"www.cs748.com", "93.184.216.34","A"},
-                {"www.cs348.com", "93.184.216.35","A"},
-                {"testmail.com","mail.testmail.com","MX"}
+                {"www.cs748.org", "99.185.216.34","A"},
+                {"www.cs348.org", "99.185.216.35","A"},
+                {"testmail.org","mail.testmail.org","MX"}
         };
 
         for (String[] record : authDatabase) {

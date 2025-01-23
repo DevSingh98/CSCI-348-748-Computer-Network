@@ -1,4 +1,6 @@
 RootServer=3.15.186.74:1234
-TLDServer=18.205.103.226:1234
-AuthoritativeServer=18.144.99.13:1234
+TLDServerCom=18.205.103.226:1234
+TLDServerOrg=52.25.90.85:1234
+AuthoritativeServerCom=18.144.99.13:1234
+AuthoritativeServerOrg=35.93.247.220:1234
 RecursiveResolver=3.87.174.211:1234
